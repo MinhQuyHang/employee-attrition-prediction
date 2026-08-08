@@ -1,0 +1,3 @@
+,Precision,Recall,F1,PR-AUC,ROC-AUC
+Logistic Regression (tuned),0.3556,0.6809,0.4672,0.568,0.7856
+CatBoost (tuned),0.7778,0.2979,0.4308,0.572,0.8012
