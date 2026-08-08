@@ -46,6 +46,10 @@ def preprocess_input(df_raw: pd.DataFrame) -> pd.DataFrame:
     category (chỉ nhìn giá trị có mặt trong chính lần gọi đó, khác lúc train trên toàn bộ
     dữ liệu). Set thủ công từng cột dummy theo đúng schema đã lưu lúc train — đã kiểm chứng
     khớp 100% với pipeline gốc trên toàn bộ 1470 dòng lẫn từng dòng đơn lẻ.
+
+    (Bug này bắt được lần đầu khi build app.py bản Streamlit: cùng 1 nhân viên, get_dummies
+    trực tiếp cho ra 4.1% trong khi pipeline gốc cho 91.5% — sai lệch hoàn toàn. Áp dụng
+    luôn cách sửa đó ở đây ngay từ đầu.)
     """
     df_raw = df_raw.reset_index(drop=True)
     encoded = pd.DataFrame(0, index=df_raw.index, columns=schema["model_columns"])

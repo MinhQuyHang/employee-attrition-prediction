@@ -116,6 +116,44 @@ employee-attrition-prediction/
 └── README.md
 ```
 
+## 🐛 Những lỗi thật gặp phải trong lúc làm
+
+Không phải mọi thứ đúng ngay từ lần chạy đầu — 3 lỗi dưới đây là thật, bắt được khi số liệu
+trông "đẹp bất thường" hoặc sai rõ ràng, không phải liệt kê cho có. Chi tiết trước/sau nằm
+trong git log (`git log --oneline`) và trong chính các notebook, tại đúng chỗ lỗi xảy ra.
+
+1. **SMOTE rò rỉ qua các fold Cross-Validation** (Ngày 2) — so sánh nhanh 5 mô hình bằng
+   cách đưa thẳng dữ liệu đã SMOTE vào `cross_validate()`. Recall/Precision/PR-AUC của
+   *mọi* mô hình đều ra 90-98%, cao hơn baseline (~50%) một cách vô lý. Nguyên nhân: một
+   điểm tổng hợp ở fold validation có thể được nội suy từ điểm gốc đang nằm ở fold train
+   của chính vòng đó. Sửa bằng `imblearn.Pipeline` để SMOTE chạy lại trong từng fold — số
+   liệu rơi về mức thực tế hơn (Recall 34-49%).
+2. **Logic tìm threshold bị đảo ngược** (Ngày 3) — dùng `np.argmax(recalls >= 0.80)` để
+   tìm ngưỡng đạt Recall≥0.80, nhưng `argmax` trả về vị trí *đầu tiên* thoả điều kiện, trong
+   khi recall giảm dần theo threshold tăng → chọn nhầm ngưỡng ≈0.001, model gắn cờ gần hết
+   mọi người là rủi ro cao (Recall=1.0 nhưng Precision=0.16, vô dụng). Sửa bằng cách lấy vị
+   trí *cuối cùng* thoả điều kiện thay vì đầu tiên.
+3. **`pd.get_dummies(drop_first=True)` vỡ khi encode 1 dòng dữ liệu** (Ngày 4, lúc build
+   dashboard) — hàm tiền xử lý cho form nhập tay gọi `get_dummies` trực tiếp trên 1 dòng,
+   nhưng với 1 dòng thì mỗi cột categorical chỉ có 1 giá trị, nên `drop_first` xoá luôn giá
+   trị đó bất kể nó có phải category tham chiếu lúc train hay không. Cùng 1 nhân viên, xác
+   suất đúng là 91.5% nhưng hàm lỗi cho ra 4.1%. Sửa bằng cách encode thủ công theo đúng
+   schema cột đã lưu, verify lại khớp 100% trên toàn bộ 1470 dòng lẫn từng dòng đơn lẻ.
+
+## 🔄 Nếu làm lại, mình sẽ cải thiện thêm
+
+- **Hiệu chỉnh xác suất (calibration):** threshold cuối cùng chỉ 0.092 — dấu hiệu xác suất
+  CatBoost đang lệch thấp so với xác suất "đúng nghĩa". Platt scaling hoặc Isotonic
+  Regression (`CalibratedClassifierCV`) có thể giúp con số dễ diễn giải hơn cho HR.
+- **Ngưỡng phân khúc Trung bình (threshold/3) là heuristic mình tự đặt**, chưa được ai
+  ngoài kiểm chứng — nên ngồi lại với HR thật để xem 3 mức Thấp/Trung bình/Cao có khớp với
+  cách họ muốn hành động hay không, thay vì tự quyết một mình.
+- **73/247 false positives ở tập test là chi phí vận hành thật** (gần 30% người bị gắn cờ
+  nhầm) — đáng lẽ nên trình bày rõ đánh đổi này với stakeholder trước khi chốt threshold,
+  chứ không chỉ tối ưu Recall một chiều.
+- **Chỉ có 1 snapshot dữ liệu**, chưa kiểm tra model có "trôi" (drift) theo thời gian khi
+  đặc điểm nhân sự công ty thay đổi — nếu triển khai thật cần theo dõi định kỳ.
+
 ## 🛠️ Tech Stack
 
 Python · pandas · scikit-learn · imbalanced-learn · CatBoost/XGBoost/LightGBM · SHAP · Streamlit · Gradio

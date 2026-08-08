@@ -40,6 +40,12 @@ def preprocess_input(df_raw: pd.DataFrame) -> pd.DataFrame:
     kỳ vọng. KHÔNG dùng pd.get_dummies() trực tiếp ở đây — với dữ liệu nhỏ/1 dòng nó sẽ
     drop nhầm category (vì drop_first chỉ nhìn giá trị có mặt trong chính lần gọi đó, khác
     hẳn lúc train trên toàn bộ dữ liệu). Set thủ công từng cột dummy theo đúng schema đã lưu.
+
+    Bug thật gặp phải khi build hàm này: bản đầu gọi thẳng get_dummies(drop_first=True)
+    trên 1 dòng input từ form. Với 1 dòng, mỗi cột categorical chỉ có 1 giá trị -> drop_first
+    xoá luôn giá trị đó, bất kể nó có phải category tham chiếu lúc train hay không. Cùng một
+    nhân viên: pipeline gốc cho xác suất 91.5%, bản lỗi cho ra 4.1%. Đã sửa + verify khớp
+    100% trên toàn bộ 1470 dòng lẫn từng dòng đơn lẻ trước khi dùng thật.
     """
     df_raw = df_raw.reset_index(drop=True)
     encoded = pd.DataFrame(0, index=df_raw.index, columns=schema["model_columns"])
