@@ -60,6 +60,28 @@ mạnh nhất; chính sách làm thêm giờ và cường độ công tác mới
 
 ![SHAP Beeswarm](images/10_shap_beeswarm.png)
 
+## 🔬 Phân tích chuyên sâu (`notebooks/05_deep_dive_insights.ipynb`)
+
+Ngoài quy trình 4 ngày chuẩn, có thêm 1 notebook đào sâu vào những câu hỏi mà một mô hình
+"chạy đúng số liệu" chưa tự trả lời được:
+
+- **Chi phí thực ($):** tối ưu chi phí không ràng buộc luôn đẩy ngưỡng về gần 0 (flag gần
+  hết công ty) — vô dụng trên thực tế vì HR không đủ năng lực can thiệp cá nhân hoá hàng
+  trăm người. Thêm ràng buộc theo năng lực HR (capacity) mới ra được khuyến nghị hành động
+  được: ở ngưỡng đang dùng (~37% capacity), ước tính tiết kiệm hàng trăm nghìn $ so với
+  không dùng model, trên quy mô tập test.
+- **Mô hình bỏ sót ai:** nhóm bị bỏ sót (False Negative) có thu nhập cao gấp ~2.4 lần, thâm
+  niên gấp ~4.4 lần nhóm bắt đúng, và **0% làm thêm giờ** (so với 79% ở nhóm bắt đúng) — mô
+  hình học rất tốt kiểu "trẻ, OT nhiều, dễ burnout" nhưng gần như mù với kiểu "nghỉ việc âm
+  thầm" của nhân sự thâm niên, thu nhập tốt. Đây là giới hạn thật, cần thêm dữ liệu mới
+  (khảo sát gắn kết, tín hiệu thị trường lao động) mới thu hẹp được, không thể tune ra.
+- **Công bằng thuật toán:** ổn theo giới tính (Disparate Impact Ratio 0.899, đạt quy tắc
+  4/5); có tín hiệu đáng theo dõi ở nhóm tuổi 45+ (Recall chỉ 0.667, thấp hơn hẳn 2 nhóm còn
+  lại) — khớp với phát hiện ở trên, dù cỡ mẫu còn nhỏ (9 người).
+- **Driver theo phòng ban:** bất ngờ là top 3 yếu tố quan trọng nhất **giống hệt nhau** ở cả
+  3 phòng ban — nghĩa là chính sách rà soát OT/công tác nên áp dụng company-wide thay vì
+  thiết kế riêng theo từng phòng.
+
 ## 🖥️ Dashboard demo
 
 Dự án có **2 phiên bản dashboard** (cùng logic, khác nền tảng) để demo:
@@ -106,7 +128,8 @@ employee-attrition-prediction/
 │   ├── 01_eda_preprocessing.ipynb
 │   ├── 02_split_smote_baseline.ipynb
 │   ├── 03_tuning_evaluation_threshold.ipynb
-│   └── 04_shap_explainability.ipynb
+│   ├── 04_shap_explainability.ipynb
+│   └── 05_deep_dive_insights.ipynb   # cost-benefit, error analysis, fairness audit
 ├── models/                           # scaler, model cuối, threshold, schema cho app
 ├── images/                           # toàn bộ biểu đồ (EDA, SHAP, evaluation)
 ├── app/
