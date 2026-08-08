@@ -1,0 +1,243 @@
+{
+  "categorical_cols": [
+    "BusinessTravel",
+    "Department",
+    "EducationField",
+    "Gender",
+    "JobRole",
+    "MaritalStatus",
+    "OverTime"
+  ],
+  "categorical_values": {
+    "BusinessTravel": [
+      "Non-Travel",
+      "Travel_Frequently",
+      "Travel_Rarely"
+    ],
+    "Department": [
+      "Human Resources",
+      "Research & Development",
+      "Sales"
+    ],
+    "EducationField": [
+      "Human Resources",
+      "Life Sciences",
+      "Marketing",
+      "Medical",
+      "Other",
+      "Technical Degree"
+    ],
+    "Gender": [
+      "Female",
+      "Male"
+    ],
+    "JobRole": [
+      "Healthcare Representative",
+      "Human Resources",
+      "Laboratory Technician",
+      "Manager",
+      "Manufacturing Director",
+      "Research Director",
+      "Research Scientist",
+      "Sales Executive",
+      "Sales Representative"
+    ],
+    "MaritalStatus": [
+      "Divorced",
+      "Married",
+      "Single"
+    ],
+    "OverTime": [
+      "No",
+      "Yes"
+    ]
+  },
+  "numeric_cols": [
+    "Age",
+    "DailyRate",
+    "DistanceFromHome",
+    "Education",
+    "EnvironmentSatisfaction",
+    "HourlyRate",
+    "JobInvolvement",
+    "JobLevel",
+    "JobSatisfaction",
+    "MonthlyIncome",
+    "MonthlyRate",
+    "NumCompaniesWorked",
+    "PercentSalaryHike",
+    "PerformanceRating",
+    "RelationshipSatisfaction",
+    "StockOptionLevel",
+    "TotalWorkingYears",
+    "TrainingTimesLastYear",
+    "WorkLifeBalance",
+    "YearsAtCompany",
+    "YearsInCurrentRole",
+    "YearsSinceLastPromotion",
+    "YearsWithCurrManager"
+  ],
+  "numeric_ranges": {
+    "Age": [
+      18,
+      60,
+      36
+    ],
+    "DailyRate": [
+      102,
+      1499,
+      802
+    ],
+    "DistanceFromHome": [
+      1,
+      29,
+      7
+    ],
+    "Education": [
+      1,
+      5,
+      3
+    ],
+    "EnvironmentSatisfaction": [
+      1,
+      4,
+      3
+    ],
+    "HourlyRate": [
+      30,
+      100,
+      66
+    ],
+    "JobInvolvement": [
+      1,
+      4,
+      3
+    ],
+    "JobLevel": [
+      1,
+      5,
+      2
+    ],
+    "JobSatisfaction": [
+      1,
+      4,
+      3
+    ],
+    "MonthlyIncome": [
+      1009,
+      19999,
+      4919
+    ],
+    "MonthlyRate": [
+      2094,
+      26999,
+      14235
+    ],
+    "NumCompaniesWorked": [
+      0,
+      9,
+      2
+    ],
+    "PercentSalaryHike": [
+      11,
+      25,
+      14
+    ],
+    "PerformanceRating": [
+      3,
+      4,
+      3
+    ],
+    "RelationshipSatisfaction": [
+      1,
+      4,
+      3
+    ],
+    "StockOptionLevel": [
+      0,
+      3,
+      1
+    ],
+    "TotalWorkingYears": [
+      0,
+      40,
+      10
+    ],
+    "TrainingTimesLastYear": [
+      0,
+      6,
+      3
+    ],
+    "WorkLifeBalance": [
+      1,
+      4,
+      3
+    ],
+    "YearsAtCompany": [
+      0,
+      40,
+      5
+    ],
+    "YearsInCurrentRole": [
+      0,
+      18,
+      3
+    ],
+    "YearsSinceLastPromotion": [
+      0,
+      15,
+      1
+    ],
+    "YearsWithCurrManager": [
+      0,
+      17,
+      3
+    ]
+  },
+  "model_columns": [
+    "Age",
+    "DailyRate",
+    "DistanceFromHome",
+    "Education",
+    "EnvironmentSatisfaction",
+    "HourlyRate",
+    "JobInvolvement",
+    "JobLevel",
+    "JobSatisfaction",
+    "MonthlyIncome",
+    "MonthlyRate",
+    "NumCompaniesWorked",
+    "PercentSalaryHike",
+    "PerformanceRating",
+    "RelationshipSatisfaction",
+    "StockOptionLevel",
+    "TotalWorkingYears",
+    "TrainingTimesLastYear",
+    "WorkLifeBalance",
+    "YearsAtCompany",
+    "YearsInCurrentRole",
+    "YearsSinceLastPromotion",
+    "YearsWithCurrManager",
+    "BusinessTravel_Travel_Frequently",
+    "BusinessTravel_Travel_Rarely",
+    "Department_Research & Development",
+    "Department_Sales",
+    "EducationField_Life Sciences",
+    "EducationField_Marketing",
+    "EducationField_Medical",
+    "EducationField_Other",
+    "EducationField_Technical Degree",
+    "Gender_Male",
+    "JobRole_Human Resources",
+    "JobRole_Laboratory Technician",
+    "JobRole_Manager",
+    "JobRole_Manufacturing Director",
+    "JobRole_Research Director",
+    "JobRole_Research Scientist",
+    "JobRole_Sales Executive",
+    "JobRole_Sales Representative",
+    "MaritalStatus_Married",
+    "MaritalStatus_Single",
+    "OverTime_Yes"
+  ]
+}
