@@ -79,7 +79,7 @@ st.caption(
     f"(đã tối ưu cho Recall ≥ 0.80 — ưu tiên không bỏ sót nhân sự có nguy cơ)"
 )
 
-tab1, tab2 = st.tabs(["📁 Tải CSV hàng loạt", "✍️ Nhập tay 1 nhân viên"])
+tab1, tab2, tab3 = st.tabs(["📁 Tải CSV hàng loạt", "✍️ Nhập tay 1 nhân viên", "🎯 Top rủi ro cao nhất"])
 
 # ----------------------------------------------------------------------------
 # TAB 1 — Batch CSV
@@ -219,10 +219,12 @@ with tab2:
             "YearsWithCurrManager": YearsWithCurrManager, "NumCompaniesWorked": NumCompaniesWorked,
             "TrainingTimesLastYear": TrainingTimesLastYear,
         }
-        # Điền giá trị trung vị (từ schema) cho các cột numeric không có trên form
         for c in remaining:
             row[c] = schema["numeric_ranges"][c][2]
+        st.session_state["last_row"] = row  # lưu lại để phần what-if bên dưới dùng, không cần submit lại
 
+    if "last_row" in st.session_state:
+        row = st.session_state["last_row"]
         input_df = pd.DataFrame([row])
         processed = preprocess_input(input_df)
         proba = float(model.predict_proba(processed)[:, 1][0])
@@ -251,6 +253,83 @@ with tab2:
             shap.plots.waterfall(shap_display, show=False, max_display=8)
             st.pyplot(fig, use_container_width=True)
             plt.close(fig)
+
+        st.divider()
+        st.write("#### 🔄 Thử what-if: nếu đổi 1 yếu tố, rủi ro thay đổi thế nào?")
+        st.caption(
+            "Dựa trên phát hiện ở notebook phân tích chuyên sâu (05, 06): OverTime là yếu tố "
+            "mạnh nhất, StockOptionLevel và BusinessTravel cũng ảnh hưởng rõ rệt. Đây là những "
+            "đòn bẩy HR có thể thực sự can thiệp được — không phải mọi yếu tố đều vậy (VD: "
+            "không thể 'đổi Age')."
+        )
+        wcol1, wcol2, wcol3 = st.columns(3)
+        with wcol1:
+            wi_overtime = st.selectbox("Nếu OverTime đổi thành", schema["categorical_values"]["OverTime"],
+                                        index=schema["categorical_values"]["OverTime"].index(row["OverTime"]),
+                                        key="wi_ot")
+        with wcol2:
+            wi_stock = st.slider("Nếu StockOptionLevel đổi thành", 0, 3, int(row["StockOptionLevel"]), key="wi_stock")
+        with wcol3:
+            wi_travel = st.selectbox("Nếu BusinessTravel đổi thành", schema["categorical_values"]["BusinessTravel"],
+                                      index=schema["categorical_values"]["BusinessTravel"].index(row["BusinessTravel"]),
+                                      key="wi_travel")
+
+        wi_row = dict(row)
+        wi_row["OverTime"] = wi_overtime
+        wi_row["StockOptionLevel"] = wi_stock
+        wi_row["BusinessTravel"] = wi_travel
+        wi_processed = preprocess_input(pd.DataFrame([wi_row]))
+        wi_proba = float(model.predict_proba(wi_processed)[:, 1][0])
+        delta = wi_proba - proba
+
+        wc1, wc2, wc3 = st.columns(3)
+        wc1.metric("Rủi ro hiện tại", f"{proba:.1%}")
+        wc2.metric("Rủi ro sau khi đổi", f"{wi_proba:.1%}", delta=f"{delta:+.1%}", delta_color="inverse")
+        wc3.metric("Mức rủi ro mới", risk_tier(wi_proba))
+
+with tab3:
+    st.write(
+        "Chấm điểm rủi ro cho **toàn bộ nhân sự hiện có** (dùng luôn dataset đã có, "
+        "không cần tải file) — dùng để triage nhanh: HR nên ưu tiên liên hệ ai trước."
+    )
+    top_n = st.slider("Số lượng hiển thị", 5, 100, 20, step=5)
+
+    @st.cache_data
+    def compute_leaderboard():
+        raw_full = pd.read_csv("data/raw/WA_Fn-UseC_-HR-Employee-Attrition.csv")
+        drop_cols = [c for c in ["EmployeeCount", "StandardHours", "Over18", "EmployeeNumber", "Attrition"]
+                     if c in raw_full.columns]
+        raw_clean = raw_full.drop(columns=drop_cols)
+        processed_full = preprocess_input(raw_clean)
+        proba_full = model.predict_proba(processed_full)[:, 1]
+        return raw_full, processed_full, proba_full
+
+    raw_full, processed_full, proba_full = compute_leaderboard()
+    order = np.argsort(-proba_full)[:top_n]
+
+    shap_top = explainer(processed_full.iloc[order])
+    if len(shap_top.shape) == 3:
+        shap_top = shap_top[:, :, 1]
+
+    reasons = []
+    for i in range(len(order)):
+        vals = pd.Series(shap_top.values[i], index=schema["model_columns"])
+        top2 = vals[vals > 0].sort_values(ascending=False).head(2)
+        reasons.append(" · ".join(top2.index.tolist()) if len(top2) else "—")
+
+    display_cols = ["Department", "JobRole", "Age", "MonthlyIncome", "OverTime", "YearsAtCompany"]
+    leaderboard = raw_full.iloc[order][display_cols].copy()
+    leaderboard.insert(0, "Hạng", range(1, len(order) + 1))
+    leaderboard["Xác suất nghỉ việc"] = [f"{p:.1%}" for p in proba_full[order]]
+    leaderboard["Mức rủi ro"] = [risk_tier(p) for p in proba_full[order]]
+    leaderboard["Lý do chính (SHAP)"] = reasons
+
+    st.dataframe(leaderboard, use_container_width=True, hide_index=True)
+    st.download_button(
+        "⬇️ Tải leaderboard đầy đủ",
+        leaderboard.to_csv(index=False).encode("utf-8-sig"),
+        "top_risk_leaderboard.csv", "text/csv",
+    )
 
 st.divider()
 st.caption(

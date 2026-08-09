@@ -119,7 +119,49 @@ def predict_single(Age, Gender, MaritalStatus, DistanceFromHome, EducationField,
     tier = risk_tier(proba)
     fig = make_waterfall(processed)
 
-    return f"{proba:.1%}", tier, fig
+    return f"{proba:.1%}", tier, fig, row
+
+
+def predict_whatif(current_row, wi_overtime, wi_stock, wi_travel, original_proba_text):
+    if current_row is None:
+        return "Hãy bấm 'Dự đoán' ở trên trước đã", "", ""
+    wi_row = dict(current_row)
+    wi_row["OverTime"] = wi_overtime
+    wi_row["StockOptionLevel"] = wi_stock
+    wi_row["BusinessTravel"] = wi_travel
+    processed = preprocess_input(pd.DataFrame([wi_row]))
+    wi_proba = float(model.predict_proba(processed)[:, 1][0])
+    orig_proba = float(original_proba_text.strip('%')) / 100
+    delta = (wi_proba - orig_proba) * 100
+    return f"{wi_proba:.1%}", risk_tier(wi_proba), f"{delta:+.1f} điểm %"
+
+
+def compute_leaderboard(top_n):
+    raw_full = pd.read_csv("data/raw/WA_Fn-UseC_-HR-Employee-Attrition.csv")
+    drop_cols = [c for c in ["EmployeeCount", "StandardHours", "Over18", "EmployeeNumber", "Attrition"]
+                 if c in raw_full.columns]
+    raw_clean = raw_full.drop(columns=drop_cols)
+    processed_full = preprocess_input(raw_clean)
+    proba_full = model.predict_proba(processed_full)[:, 1]
+
+    order = np.argsort(-proba_full)[:int(top_n)]
+    shap_top = explainer(processed_full.iloc[order])
+    if len(shap_top.shape) == 3:
+        shap_top = shap_top[:, :, 1]
+
+    reasons = []
+    for i in range(len(order)):
+        vals = pd.Series(shap_top.values[i], index=schema["model_columns"])
+        top2 = vals[vals > 0].sort_values(ascending=False).head(2)
+        reasons.append(" · ".join(top2.index.tolist()) if len(top2) else "—")
+
+    display_cols = ["Department", "JobRole", "Age", "MonthlyIncome", "OverTime", "YearsAtCompany"]
+    board = raw_full.iloc[order][display_cols].copy()
+    board.insert(0, "Hạng", range(1, len(order) + 1))
+    board["Xác suất"] = [f"{p:.1%}" for p in proba_full[order]]
+    board["Mức rủi ro"] = [risk_tier(p) for p in proba_full[order]]
+    board["Lý do chính (SHAP)"] = reasons
+    return board
 
 
 # ----------------------------------------------------------------------------
@@ -226,6 +268,7 @@ with gr.Blocks(title="Dự đoán Nghỉ việc Nhân sự") as demo:
             proba_out = gr.Textbox(label="Xác suất nghỉ việc")
             tier_out = gr.Textbox(label="Mức rủi ro")
         shap_out = gr.Plot(label="Vì sao mô hình dự đoán như vậy (SHAP)")
+        row_state = gr.State()
 
         predict_btn.click(
             predict_single,
@@ -236,7 +279,30 @@ with gr.Blocks(title="Dự đoán Nghỉ việc Nhân sự") as demo:
                     WorkLifeBalance, TotalWorkingYears, YearsAtCompany, YearsInCurrentRole,
                     YearsSinceLastPromotion, YearsWithCurrManager, NumCompaniesWorked,
                     TrainingTimesLastYear],
-            outputs=[proba_out, tier_out, shap_out],
+            outputs=[proba_out, tier_out, shap_out, row_state],
+        )
+
+        gr.Markdown("#### 🔄 Thử what-if: nếu đổi 1 yếu tố, rủi ro thay đổi thế nào?")
+        gr.Markdown(
+            "_Dựa trên notebook phân tích chuyên sâu (05, 06): OverTime là yếu tố mạnh nhất, "
+            "StockOptionLevel và BusinessTravel cũng ảnh hưởng rõ rệt — đây là những đòn bẩy "
+            "HR có thể thực sự can thiệp được._"
+        )
+        with gr.Row():
+            wi_overtime = gr.Dropdown(schema["categorical_values"]["OverTime"], label="OverTime mới", value="No")
+            wi_stock = gr.Slider(0, 3, value=2, step=1, label="StockOptionLevel mới")
+            wi_travel = gr.Dropdown(schema["categorical_values"]["BusinessTravel"], label="BusinessTravel mới",
+                                     value="Non-Travel")
+        whatif_btn = gr.Button("So sánh what-if")
+        with gr.Row():
+            wi_proba_out = gr.Textbox(label="Xác suất mới")
+            wi_tier_out = gr.Textbox(label="Mức rủi ro mới")
+            wi_delta_out = gr.Textbox(label="Thay đổi so với hiện tại")
+
+        whatif_btn.click(
+            predict_whatif,
+            inputs=[row_state, wi_overtime, wi_stock, wi_travel, proba_out],
+            outputs=[wi_proba_out, wi_tier_out, wi_delta_out],
         )
 
     with gr.Tab("📁 Tải CSV hàng loạt"):
@@ -250,6 +316,17 @@ with gr.Blocks(title="Dự đoán Nghỉ việc Nhân sự") as demo:
         result_file = gr.File(label="Tải kết quả CSV")
 
         batch_btn.click(predict_batch, inputs=file_in, outputs=[result_df, result_file])
+
+    with gr.Tab("🎯 Top rủi ro cao nhất"):
+        gr.Markdown(
+            "Chấm điểm rủi ro cho **toàn bộ nhân sự hiện có** (dùng luôn dataset đã có, "
+            "không cần tải file) — dùng để triage nhanh: HR nên ưu tiên liên hệ ai trước."
+        )
+        top_n_slider = gr.Slider(5, 100, value=20, step=5, label="Số lượng hiển thị")
+        leaderboard_btn = gr.Button("Tính leaderboard", variant="primary")
+        leaderboard_out = gr.Dataframe(label="Top nhân sự rủi ro cao nhất")
+
+        leaderboard_btn.click(compute_leaderboard, inputs=top_n_slider, outputs=leaderboard_out)
 
     gr.Markdown(
         "---\n⚠️ Công cụ hỗ trợ ra quyết định — không thay thế đánh giá của chuyên viên HR. "

@@ -81,6 +81,17 @@ Ngoài quy trình 4 ngày chuẩn, có thêm 1 notebook đào sâu vào những 
 - **Driver theo phòng ban:** bất ngờ là top 3 yếu tố quan trọng nhất **giống hệt nhau** ở cả
   3 phòng ban — nghĩa là chính sách rà soát OT/công tác nên áp dụng company-wide thay vì
   thiết kế riêng theo từng phòng.
+- **4 chân dung người nghỉ việc** (`06_personas_and_baseline.ipynb`, K-Means trên toàn bộ 237
+  người đã nghỉ): không chỉ 1 kiểu người rời đi. Nổi bật nhất — cụm "rời đi trong âm thầm"
+  (17 người, lớn tuổi nhất, lương cao nhất, thâm niên 20+ năm, hầu như không OT) **trùng khớp
+  độc lập lần 2** với nhóm False Negative ở trên, bằng phương pháp hoàn toàn khác (clustering
+  không giám sát thay vì phân tích lỗi có giám sát) — 2 phương pháp độc lập cùng kết luận là
+  tín hiệu đáng tin hơn nhiều so với 1 phân tích đơn lẻ.
+- **ML có đáng công sức không?** So với luật đơn giản "ai đang OT thì liên hệ", ở cùng mức độ
+  bao phủ, ML chỉ nhỉnh hơn +2 điểm % Recall — khá khiêm tốn. Khoảng cách nới rộng hơn
+  (+10 điểm %) khi so với luật 2 biến. Kết luận trung thực: giá trị thật của ML không nằm ở
+  quyết định nhị phân "liên hệ hay không", mà ở khả năng **xếp hạng liên tục** theo capacity
+  thực tế, **kết hợp nhiều tín hiệu yếu**, và **giải thích được** — 3 thứ luật if-else không làm được.
 
 ## 🖥️ Dashboard demo
 
@@ -93,8 +104,13 @@ Dự án có **2 phiên bản dashboard** (cùng logic, khác nền tảng) đ�
 | Deploy free | Streamlit Community Cloud | Hugging Face Spaces |
 | Phù hợp khi | dashboard nội bộ, nhiều panel | demo model chia sẻ nhanh, hệ sinh thái AI/HuggingFace |
 
-Cả 2 đều hỗ trợ: **Tải CSV hàng loạt** (định dạng gốc như file Kaggle) → chấm điểm rủi ro
-toàn bộ danh sách, và **Nhập tay 1 nhân viên** → dự đoán tức thì + giải thích SHAP riêng.
+Cả 2 đều có **3 chế độ**:
+- **Tải CSV hàng loạt** (định dạng gốc như file Kaggle) → chấm điểm rủi ro toàn bộ danh sách
+- **Nhập tay 1 nhân viên** → dự đoán tức thì + giải thích SHAP + **what-if simulator**: thử
+  đổi OverTime/StockOptionLevel/BusinessTravel và xem rủi ro thay đổi ngay lập tức — dựa trên
+  3 đòn bẩy HR thực sự can thiệp được (notebook 05, 06)
+- **🎯 Top rủi ro cao nhất**: chấm điểm toàn bộ nhân sự hiện có (không cần upload), xếp hạng
+  Top N kèm lý do chính (SHAP) — sẵn sàng dùng để triage ngay, không cần chuẩn bị dữ liệu gì thêm
 
 ### Deploy Gradio lên Hugging Face Spaces (free)
 
@@ -129,7 +145,8 @@ employee-attrition-prediction/
 │   ├── 02_split_smote_baseline.ipynb
 │   ├── 03_tuning_evaluation_threshold.ipynb
 │   ├── 04_shap_explainability.ipynb
-│   └── 05_deep_dive_insights.ipynb   # cost-benefit, error analysis, fairness audit
+│   ├── 05_deep_dive_insights.ipynb   # cost-benefit, error analysis, fairness audit
+│   └── 06_personas_and_baseline.ipynb # persona clustering, ML vs luật đơn giản
 ├── models/                           # scaler, model cuối, threshold, schema cho app
 ├── images/                           # toàn bộ biểu đồ (EDA, SHAP, evaluation)
 ├── app/
