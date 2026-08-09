@@ -154,7 +154,8 @@ employee-attrition-prediction/
 │   ├── 04_shap_explainability.ipynb
 │   ├── 05_deep_dive_insights.ipynb   # cost-benefit, error analysis, fairness audit
 │   ├── 06_personas_and_baseline.ipynb # persona clustering, ML vs luật đơn giản
-│   └── 07_survival_analysis.ipynb    # Kaplan-Meier, Cox hazard ratios ("vách đá năm 1")
+│   ├── 07_survival_analysis.ipynb    # Kaplan-Meier, Cox hazard ratios ("vách đá năm 1")
+│   └── 08_calibration_check.ipynb    # kiểm chứng (và bác bỏ) giả thuyết về calibration
 ├── models/                           # scaler, model cuối, threshold, schema cho app
 ├── images/                           # toàn bộ biểu đồ (EDA, SHAP, evaluation)
 ├── app/
@@ -190,9 +191,13 @@ trong git log (`git log --oneline`) và trong chính các notebook, tại đúng
 
 ## 🔄 Nếu làm lại, mình sẽ cải thiện thêm
 
-- **Hiệu chỉnh xác suất (calibration):** threshold cuối cùng chỉ 0.092 — dấu hiệu xác suất
-  CatBoost đang lệch thấp so với xác suất "đúng nghĩa". Platt scaling hoặc Isotonic
-  Regression (`CalibratedClassifierCV`) có thể giúp con số dễ diễn giải hơn cho HR.
+- ~~**Hiệu chỉnh xác suất (calibration):** threshold cuối cùng chỉ 0.092...~~ **[Đã kiểm tra
+  ở `08_calibration_check.ipynb` — giả thuyết này SAI.]** Áp dụng Platt scaling
+  (`CalibratedClassifierCV`) gần như không đổi threshold (0.092 → 0.094), Brier score, hay
+  ROC-AUC/PR-AUC. Model đã calibrate tương đối tốt từ đầu — threshold thấp là hệ quả toán học
+  tất yếu của việc yêu cầu Recall≥0.80 trên bài toán có base rate chỉ 16%, không phải lỗi
+  model. Để nguyên gạch ngang ở đây thay vì xoá, vì tự sửa sai chính mình cũng là một phần
+  của quá trình — xem chi tiết trong notebook.
 - **Ngưỡng phân khúc Trung bình (threshold/3) là heuristic mình tự đặt**, chưa được ai
   ngoài kiểm chứng — nên ngồi lại với HR thật để xem 3 mức Thấp/Trung bình/Cao có khớp với
   cách họ muốn hành động hay không, thay vì tự quyết một mình.
