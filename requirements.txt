@@ -10,5 +10,6 @@ catboost
 shap
 streamlit
 gradio
+lifelines
 joblib
 jupyter
