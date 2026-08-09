@@ -70,6 +70,38 @@ def risk_tier(p: float) -> str:
 
 TIER_COLOR = {"Thấp": "🟢", "Trung bình": "🟡", "Cao": "🔴"}
 
+
+def generate_briefing(row: dict, proba: float, tier: str, top_factors: list) -> str:
+    """Sinh 1 đoạn tóm tắt bằng tiếng Việt tự nhiên, ghép từ luật + SHAP + phát hiện
+    survival analysis (notebook 07) — hoàn toàn rule-based, KHÔNG gọi API trả phí nào,
+    để giữ đúng tinh thần 'miễn phí' của cả dự án."""
+    parts = [f"Xác suất nghỉ việc ước tính **{proba:.0%}** — mức rủi ro **{tier}**."]
+
+    if top_factors:
+        parts.append(f"Yếu tố góp phần nhiều nhất: {', '.join(top_factors[:2])}.")
+
+    if row.get("OverTime") == "Yes":
+        parts.append(
+            "Đang làm thêm giờ — theo phân tích Cox (notebook 07), nhóm này rời đi "
+            "nhanh gấp **3.37 lần** nhóm không làm thêm giờ, kiểm soát các yếu tố khác."
+        )
+    if row.get("YearsAtCompany", 99) <= 1:
+        parts.append(
+            "⚠️ Đang trong **năm đầu tiên** tại công ty — giai đoạn ghi nhận **31.6%** "
+            "tổng số ca nghỉ việc toàn công ty (notebook 07), nên đây là mốc ưu tiên check-in."
+        )
+    if row.get("StockOptionLevel", 2) == 0:
+        parts.append("Chưa có cổ phần thưởng (StockOptionLevel=0) — yếu tố có hệ số bảo vệ mạnh nếu tăng.")
+    if row.get("BusinessTravel") == "Travel_Frequently":
+        parts.append("Tần suất công tác cao — một trong các đòn bẩy HR có thể điều chỉnh được.")
+
+    if tier == "Cao":
+        parts.append("**Gợi ý:** nên xếp vào danh sách ưu tiên trao đổi trong đợt can thiệp gần nhất.")
+    elif tier == "Thấp":
+        parts.append("**Gợi ý:** chưa cần hành động ngay, có thể theo dõi định kỳ.")
+
+    return " ".join(parts)
+
 # ----------------------------------------------------------------------------
 # Header
 # ----------------------------------------------------------------------------
@@ -253,6 +285,10 @@ with tab2:
             shap.plots.waterfall(shap_display, show=False, max_display=8)
             st.pyplot(fig, use_container_width=True)
             plt.close(fig)
+
+        top_factors = pd.Series(shap_exp.values[0], index=schema["model_columns"])
+        top_factors = top_factors[top_factors > 0].sort_values(ascending=False).head(3).index.tolist()
+        st.info(generate_briefing(row, proba, tier, top_factors))
 
         st.divider()
         st.write("#### 🔄 Thử what-if: nếu đổi 1 yếu tố, rủi ro thay đổi thế nào?")

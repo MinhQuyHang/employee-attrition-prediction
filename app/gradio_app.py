@@ -72,6 +72,29 @@ def risk_tier(p: float) -> str:
     return "🟢 Thấp"
 
 
+def generate_briefing(row: dict, proba: float, tier: str, top_factors: list) -> str:
+    """Sinh tóm tắt tự động (rule-based, KHÔNG gọi API trả phí) từ SHAP + phát hiện
+    survival analysis (notebook 07) — giữ đúng tinh thần miễn phí của dự án."""
+    parts = [f"Xác suất nghỉ việc ước tính **{proba:.0%}** — mức rủi ro **{tier}**."]
+    if top_factors:
+        parts.append(f"Yếu tố góp phần nhiều nhất: {', '.join(top_factors[:2])}.")
+    if row.get("OverTime") == "Yes":
+        parts.append(
+            "Đang làm thêm giờ — theo Cox model (notebook 07), nhóm này rời đi nhanh gấp "
+            "**3.37 lần** nhóm không OT, kiểm soát các yếu tố khác."
+        )
+    if row.get("YearsAtCompany", 99) <= 1:
+        parts.append(
+            "⚠️ Đang trong **năm đầu tiên** — giai đoạn ghi nhận **31.6%** tổng số ca nghỉ "
+            "việc toàn công ty, nên ưu tiên check-in sớm."
+        )
+    if row.get("StockOptionLevel", 2) == 0:
+        parts.append("Chưa có cổ phần thưởng — yếu tố có hệ số bảo vệ mạnh nếu tăng.")
+    if "Cao" in tier:
+        parts.append("**Gợi ý:** nên ưu tiên trao đổi trong đợt can thiệp gần nhất.")
+    return " ".join(parts)
+
+
 def make_waterfall(processed_row: pd.DataFrame):
     shap_exp = explainer(processed_row)
     if len(shap_exp.shape) == 3:
@@ -119,7 +142,14 @@ def predict_single(Age, Gender, MaritalStatus, DistanceFromHome, EducationField,
     tier = risk_tier(proba)
     fig = make_waterfall(processed)
 
-    return f"{proba:.1%}", tier, fig, row
+    shap_exp_b = explainer(processed)
+    if len(shap_exp_b.shape) == 3:
+        shap_exp_b = shap_exp_b[:, :, 1]
+    top_factors = pd.Series(shap_exp_b.values[0], index=schema["model_columns"])
+    top_factors = top_factors[top_factors > 0].sort_values(ascending=False).head(3).index.tolist()
+    briefing = generate_briefing(row, proba, tier, top_factors)
+
+    return f"{proba:.1%}", tier, fig, row, briefing
 
 
 def predict_whatif(current_row, wi_overtime, wi_stock, wi_travel, original_proba_text):
@@ -268,6 +298,7 @@ with gr.Blocks(title="Dự đoán Nghỉ việc Nhân sự") as demo:
             proba_out = gr.Textbox(label="Xác suất nghỉ việc")
             tier_out = gr.Textbox(label="Mức rủi ro")
         shap_out = gr.Plot(label="Vì sao mô hình dự đoán như vậy (SHAP)")
+        briefing_out = gr.Markdown(label="Tóm tắt")
         row_state = gr.State()
 
         predict_btn.click(
@@ -279,7 +310,7 @@ with gr.Blocks(title="Dự đoán Nghỉ việc Nhân sự") as demo:
                     WorkLifeBalance, TotalWorkingYears, YearsAtCompany, YearsInCurrentRole,
                     YearsSinceLastPromotion, YearsWithCurrManager, NumCompaniesWorked,
                     TrainingTimesLastYear],
-            outputs=[proba_out, tier_out, shap_out, row_state],
+            outputs=[proba_out, tier_out, shap_out, row_state, briefing_out],
         )
 
         gr.Markdown("#### 🔄 Thử what-if: nếu đổi 1 yếu tố, rủi ro thay đổi thế nào?")

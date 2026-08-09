@@ -92,6 +92,12 @@ Ngoài quy trình 4 ngày chuẩn, có thêm 1 notebook đào sâu vào những 
   (+10 điểm %) khi so với luật 2 biến. Kết luận trung thực: giá trị thật của ML không nằm ở
   quyết định nhị phân "liên hệ hay không", mà ở khả năng **xếp hạng liên tục** theo capacity
   thực tế, **kết hợp nhiều tín hiệu yếu**, và **giải thích được** — 3 thứ luật if-else không làm được.
+- **"Vách đá năm 1"** (`07_survival_analysis.ipynb`, Kaplan-Meier + Cox Proportional Hazards
+  — kỹ thuật thống kê khác hẳn phần còn lại của dự án): **31.6% tổng số người nghỉ việc rời
+  đi ngay trong năm đầu tiên**. Cox model định lượng bằng "tốc độ": nhân viên làm thêm giờ
+  rời đi nhanh gấp **3.37 lần** người không OT (kiểm soát mọi biến khác, p<0.001); mỗi mức
+  StockOptionLevel giảm tốc độ rời đi 36%. Cách nói "gấp 3.37 lần" dễ đưa vào slide thuyết
+  trình hơn nhiều so với SHAP value hay xác suất thô.
 
 ## 🖥️ Dashboard demo
 
@@ -106,9 +112,10 @@ Dự án có **2 phiên bản dashboard** (cùng logic, khác nền tảng) đ�
 
 Cả 2 đều có **3 chế độ**:
 - **Tải CSV hàng loạt** (định dạng gốc như file Kaggle) → chấm điểm rủi ro toàn bộ danh sách
-- **Nhập tay 1 nhân viên** → dự đoán tức thì + giải thích SHAP + **what-if simulator**: thử
-  đổi OverTime/StockOptionLevel/BusinessTravel và xem rủi ro thay đổi ngay lập tức — dựa trên
-  3 đòn bẩy HR thực sự can thiệp được (notebook 05, 06)
+- **Nhập tay 1 nhân viên** → dự đoán tức thì + giải thích SHAP + **tóm tắt tự động** (ghép
+  từ SHAP + phát hiện Cox/survival analysis, hoàn toàn rule-based — không gọi API trả phí)
+  + **what-if simulator**: thử đổi OverTime/StockOptionLevel/BusinessTravel và xem rủi ro
+  thay đổi ngay lập tức
 - **🎯 Top rủi ro cao nhất**: chấm điểm toàn bộ nhân sự hiện có (không cần upload), xếp hạng
   Top N kèm lý do chính (SHAP) — sẵn sàng dùng để triage ngay, không cần chuẩn bị dữ liệu gì thêm
 
@@ -146,7 +153,8 @@ employee-attrition-prediction/
 │   ├── 03_tuning_evaluation_threshold.ipynb
 │   ├── 04_shap_explainability.ipynb
 │   ├── 05_deep_dive_insights.ipynb   # cost-benefit, error analysis, fairness audit
-│   └── 06_personas_and_baseline.ipynb # persona clustering, ML vs luật đơn giản
+│   ├── 06_personas_and_baseline.ipynb # persona clustering, ML vs luật đơn giản
+│   └── 07_survival_analysis.ipynb    # Kaplan-Meier, Cox hazard ratios ("vách đá năm 1")
 ├── models/                           # scaler, model cuối, threshold, schema cho app
 ├── images/                           # toàn bộ biểu đồ (EDA, SHAP, evaluation)
 ├── app/
