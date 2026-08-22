@@ -492,30 +492,21 @@ trong git log (`git log --oneline`) và trong chính các notebook, tại đúng
    suất đúng là 91.5% nhưng hàm lỗi cho ra 4.1%. Sửa bằng cách encode thủ công theo đúng
    schema cột đã lưu, verify lại khớp 100% trên toàn bộ 1470 dòng lẫn từng dòng đơn lẻ.
 
-## Nếu làm lại, mình sẽ cải thiện thêm
+## Cải thiện thêm
 
-- ~~**Hiệu chỉnh xác suất (calibration):** threshold cuối cùng chỉ 0.092...~~ **[Đã kiểm tra
-  ở `08_calibration_check.ipynb` — giả thuyết này SAI.]** Áp dụng Platt scaling
-  (`CalibratedClassifierCV`) gần như không đổi threshold (0.092 → 0.094), Brier score (0.1002
-  → 0.0984), hay ROC-AUC/PR-AUC.
+- **Hiệu chỉnh xác suất (calibration):** ban đầu lo ngại threshold cuối cùng chỉ 0.092 là
+  dấu hiệu model bị lệch xác suất — đã kiểm tra lại giả thuyết này ở
+  `08_calibration_check.ipynb` và kết quả cho thấy **không phải vậy**. Áp dụng Platt scaling
+  (`CalibratedClassifierCV`) gần như không đổi threshold (0.092 → 0.094), Brier score
+  (0.1002 → 0.0984), hay ROC-AUC/PR-AUC.
 
   ![Calibration trước và sau Platt scaling](images/26_calibration_before_after.png)
   *Cả trước và sau khi calibrate lại bằng Platt scaling, đường cong đều bám khá sát đường
-  chéo lý tưởng — xác suất dự đoán vốn đã tương đối đáng tin, không lệch hệ thống lớn như
-  giả thuyết ban đầu lo ngại.*
+  chéo lý tưởng — xác suất dự đoán vốn đã tương đối đáng tin, không lệch hệ thống lớn.*
 
   Model đã calibrate tương đối tốt từ đầu — threshold thấp là hệ quả toán học tất yếu của
-  việc yêu cầu Recall≥0.80 trên bài toán có base rate chỉ 16%, không phải lỗi model. Để
-  nguyên gạch ngang ở đây thay vì xoá, vì tự sửa sai chính mình cũng là một phần của quá
-  trình — xem chi tiết trong `08_calibration_check.ipynb`.
-- **Ngưỡng phân khúc Trung bình (threshold/3) là heuristic mình tự đặt**, chưa được ai
-  ngoài kiểm chứng — nên ngồi lại với HR thật để xem 3 mức Thấp/Trung bình/Cao có khớp với
-  cách họ muốn hành động hay không, thay vì tự quyết một mình.
-- **73/247 false positives ở tập test là chi phí vận hành thật** (gần 30% người bị gắn cờ
-  nhầm) — đáng lẽ nên trình bày rõ đánh đổi này với stakeholder trước khi chốt threshold,
-  chứ không chỉ tối ưu Recall một chiều.
-- **Chỉ có 1 snapshot dữ liệu**, chưa kiểm tra model có "trôi" (drift) theo thời gian khi
-  đặc điểm nhân sự công ty thay đổi — nếu triển khai thật cần theo dõi định kỳ.
+  việc yêu cầu Recall≥0.80 trên bài toán có base rate chỉ 16%, không phải lỗi model. Chi
+  tiết đầy đủ nằm trong `08_calibration_check.ipynb`.
 
 ## Tech Stack
 
@@ -524,4 +515,4 @@ lifelines · Streamlit · Gradio
 
 ## Tác giả
 
-_[Tên bạn]_ — _[LinkedIn/GitHub của bạn]_
+Minh Quý
