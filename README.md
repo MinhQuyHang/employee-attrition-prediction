@@ -31,6 +31,7 @@ mô hình dự đoán **trước** ai có khả năng nghỉ việc cao, thay v�
 ## Dataset
 
 [IBM HR Analytics Employee Attrition & Performance](https://www.kaggle.com/datasets/pavansubhasht/ibm-hr-analytics-attrition-dataset)
+
 — 1.470 nhân viên, 35 thuộc tính, dữ liệu tổng hợp (synthetic) do IBM phát hành. Biến mục
 tiêu `Attrition` mất cân bằng: 83.9% No / 16.1% Yes.
 
