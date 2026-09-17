@@ -1,8 +1,7 @@
 # Dự Đoán & Cảnh Báo Sớm Nghỉ Việc Nhân Sự
 
 Hệ thống Machine Learning dự đoán nguy cơ nghỉ việc của nhân viên, giúp bộ phận HR can
-thiệp giữ chân nhân tài sớm thay vì bị động — xây dựng theo lộ trình 4 ngày full-time,
-từ EDA đến mô hình đã tune, giải thích được (SHAP), và dashboard demo được.
+thiệp giữ chân nhân tài sớm thay vì bị động.
 
 **Demo trực tiếp:** _(dán link Streamlit Community Cloud sau khi deploy — xem hướng dẫn bên dưới)_
 
